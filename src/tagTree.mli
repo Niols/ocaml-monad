@@ -22,6 +22,8 @@ sig
   type tag
   include Monad.BaseCollectionM
   include Applicative.Base with type 'a m := 'a m
+  val root       : 'a m -> 'a LazyList.t
+  val children   : 'a m -> (tag * 'a m) LazyList.t
   val count      : 'a m -> int
   val to_list    : 'a m -> 'a LazyList.t
   val collapse   : 'a m -> 'a m
@@ -29,6 +31,8 @@ sig
   val branch     : tag LazyList.t -> tag m
   val print      : ('a -> unit) -> 'a m -> unit
   val to_forced  : 'a m -> 'a m
+  val unzip_tree : ('a * 'b) m -> 'a m * 'b m
+  val promote    : ?cmp:('a -> 'a -> bool) -> 'a m -> 'a m
 end
 
 module Make : functor(Tag:sig

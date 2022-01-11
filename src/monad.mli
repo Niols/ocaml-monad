@@ -208,15 +208,15 @@ end
 module type BaseCollectionM =
   sig
     include BaseLazyPlus
-    (** [difference p xs ys] removes all elements from [xs] which are less than or
-    equal to some element in [ys], according to the partial order [p]. *)
     val difference : ('a -> 'a -> bool) -> 'a m -> 'a m -> 'a m
+    (** [difference p xs ys] removes all elements from [xs] which are less than
+       or equal to some element in [ys], according to the partial order [p]. *)
 
     (** [unique eq xs] removes duplicates according to the function [cmp]. *)
     val unique : ?cmp:('a -> 'a -> bool) -> 'a m -> 'a m
 
-    (** [maxima p xs] leaves only the maximal elements according to the
-  partial order [p]. *)
+    (** [maxima p xs] leaves only the maximal elements according to the partial
+       order [p]. *)
     val maxima : ('a -> 'a -> bool) -> 'a m -> 'a m
 
     (** [nub p xs ys] is the same as maxima, but some values might be treated as

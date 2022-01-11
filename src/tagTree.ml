@@ -6,6 +6,8 @@ sig
   type tag
   include Monad.BaseCollectionM
   include Applicative.Base with type 'a m := 'a m
+  val root       : 'a m -> 'a LazyList.t
+  val children   : 'a m -> (tag * 'a m) LazyList.t
   val count      : 'a m -> int
   val to_list    : 'a m -> 'a LazyList.t
   val collapse   : 'a m -> 'a m
@@ -13,6 +15,8 @@ sig
   val branch     : tag LazyList.t -> tag m
   val print      : ('a -> unit) -> 'a m -> unit
   val to_forced  : 'a m -> 'a m
+  val unzip_tree : ('a * 'b) m -> 'a m * 'b m
+  val promote    : ?cmp:('a -> 'a -> bool) -> 'a m -> 'a m
 end
 
 module Make(Tag:sig
@@ -50,7 +54,6 @@ struct
     length xs + fold_left (+) 0 (map f cs)
 
   (* Helper functions for join and plus. *)
-  let map1 f xs = map (fun (x,y) -> (f x, y)) xs
   let map2 f xs = map (fun (x,y) -> (x, f y)) xs
 
   let rec map_tree f (Node (xs,cs)) =
@@ -183,11 +186,12 @@ struct
     in let ncs = map2 close_cases cs in
        if descendents ncs then Node (xs, ncs) else Node (xs, nil)
 
-  let rec unzip_tree (Node ((x,y), cs)) =
+  let rec unzip_tree (Node (xys, cs)) =
+    let xs,ys = LazyList.unzip xys in
     let (xcs, ycs) = LazyList.unzip (map (fun (tag, c) ->
       let (xc, yc) = unzip_tree c in
       ((tag, xc), (tag, yc))) cs)
-    in Node (x, xcs), Node (y, ycs)
+    in Node (xs, xcs), Node (ys, ycs)
 
   (* Recursively promote values that appear at the same level. *)
   let promote ?(cmp = (=)) tree =
@@ -234,16 +238,16 @@ struct
           map (fun (t,c) -> t,(map_tree (map (fun (ts,x) -> (t::ts), x))
                                  (with_tags c))) cs)
 
-  let rec to_list (Node (xs, cs)) =
+  let to_list (Node (xs, cs)) =
     map (fun x -> x) xs
     ^@^ concat_map (fun (_, c) -> to_list c) cs
 
-  let rec collapse t = Node (to_list t, nil)
+  let collapse t = Node (to_list t, nil)
 
   let print p t =
     let rec print i (Node (xs, cs)) =
       let indent () =
-        for j = 0 to i do
+        for _ = 0 to i do
           printf " "
         done
       in
@@ -251,7 +255,7 @@ struct
       printf "\n";
       iter
         (fun (t,c) ->
-          for j = 0 to i do
+          for _ = 0 to i do
             printf " "
           done;
           indent (); Tag.print t; printf ": ";
