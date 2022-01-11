@@ -1,4 +1,4 @@
 (library
  (public_name monadlib)
- (modules lazyList noblock tagTree monad applicative)
+ (modules lazyList tagTree monad applicative)
  (libraries batteries threads))
