@@ -13,12 +13,15 @@ let
 in with pkgs; stdenv.mkDerivation {
   name = "monadlib";
   buildInputs = [ dune_2
+
                   ocaml
                   ocamlPackages.batteries
                   ocamlPackages.findlib
                   ocamlPackages.merlin
                   ocamlPackages.ocaml_oasis
                   ocamlPackages.ocaml
+
+                  pkgs.ocamlformat
 
                   myemacs
                 ];
